@@ -13,7 +13,7 @@ class SGN(nn.Module):
         self.dim1 = 256
         self.dataset = dataset
         self.seg = seg
-        self.num_joint = 29
+        self.num_joint = args.num_joint
         bs = args.batch_size
         if args.train:
             self.spa = self.one_hot(bs, self.num_joint, self.seg)
@@ -21,15 +21,15 @@ class SGN(nn.Module):
             self.tem = self.one_hot(bs, self.seg, self.num_joint)
             self.tem = self.tem.permute(0, 3, 1, 2).to(device)
         else:
-            self.spa = self.one_hot(32 * 5, self.num_joint, self.seg)
+            self.spa = self.one_hot(bs * 5, self.num_joint, self.seg)
             self.spa = self.spa.permute(0, 3, 2, 1).to(device)
-            self.tem = self.one_hot(32 * 5, self.seg, self.num_joint)
+            self.tem = self.one_hot(bs * 5, self.seg, self.num_joint)
             self.tem = self.tem.permute(0, 3, 1, 2).to(device)
 
         self.tem_embed = embed(self.seg, 64*4, norm=False, bias=bias)
         self.spa_embed = embed(self.num_joint, 64, norm=False, bias=bias)
-        self.joint_embed = embed(3, 64, norm=True, bias=bias)
-        self.dif_embed = embed(3, 64, norm=True, bias=bias)
+        self.joint_embed = embed(3, 64, norm=True, bias=bias, num_joint=self.num_joint)
+        self.dif_embed = embed(3, 64, norm=True, bias=bias, num_joint=self.num_joint)
         self.maxpool = nn.AdaptiveMaxPool2d((1, 1))
         self.cnn = local(self.dim1, self.dim1 * 2, bias=bias)
         self.compute_g1 = compute_g_spa(self.dim1 // 2, self.dim1, bias=bias)
@@ -92,10 +92,10 @@ class SGN(nn.Module):
         return y_onehot
 
 class norm_data(nn.Module):
-    def __init__(self, dim= 64):
+    def __init__(self, dim=64, num_joint=29):
         super(norm_data, self).__init__()
 
-        self.bn = nn.BatchNorm1d(dim * self.num_joint)
+        self.bn = nn.BatchNorm1d(dim * num_joint)
 
     def forward(self, x):
         bs, c, num_joints, step = x.size()
@@ -105,12 +105,12 @@ class norm_data(nn.Module):
         return x
 
 class embed(nn.Module):
-    def __init__(self, dim = 3, dim1 = 128, norm = True, bias = False):
+    def __init__(self, dim=3, dim1=128, norm=True, bias=False, num_joint=29):
         super(embed, self).__init__()
 
         if norm:
             self.cnn = nn.Sequential(
-                norm_data(dim),
+                norm_data(dim, num_joint),
                 cnn1x1(dim, 64, bias=bias),
                 nn.ReLU(),
                 cnn1x1(64, dim1, bias=bias),
@@ -193,4 +193,3 @@ class compute_g_spa(nn.Module):
         g3 = g1.matmul(g2)
         g = self.softmax(g3)
         return g
-    

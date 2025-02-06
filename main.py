@@ -37,6 +37,7 @@ parser.set_defaults(
     print_freq = 20,
     train = 1,
     seg = 20,
+    num_joint = 29
     )
 args = parser.parse_args()
 
@@ -77,9 +78,6 @@ def main():
     val_loader = ntu_loaders.get_val_loader(args.batch_size, args.workers)
     train_size = ntu_loaders.get_train_size()
     val_size = ntu_loaders.get_val_size()
-
-
-    test_loader = ntu_loaders.get_test_loader(32, args.workers)
 
     print('Train on %d samples, validate on %d samples' % (train_size, val_size))
 
@@ -148,8 +146,10 @@ def main():
 
     ### Test
     args.train = 0
+    args.batch_size = 32
     model = SGN(args.num_classes, args.dataset, args.seg, args)
     model = model.cuda()
+    test_loader = ntu_loaders.get_test_loader(32, args.workers)
     test(test_loader, model, checkpoint, lable_path, pred_path)
 
 
@@ -276,4 +276,3 @@ class LabelSmoothingLoss(nn.Module):
 
 if __name__ == '__main__':
     main()
-    

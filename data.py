@@ -37,9 +37,15 @@ class NTUDataLoaders(object):
         self.aug = aug
         self.seg = seg
         self.create_datasets()
+        self.all_set = NTUDataset(self.all_X, self.all_Y)
         self.train_set = NTUDataset(self.train_X, self.train_Y)
         self.val_set = NTUDataset(self.val_X, self.val_Y)
         self.test_set = NTUDataset(self.test_X, self.test_Y)
+
+    def get_all_loader(self, batch_size, num_workers):
+        return DataLoader(self.all_set, batch_size=batch_size,
+                          shuffle=False, num_workers=num_workers,
+                          collate_fn=self.collate_fn_fix_test, pin_memory=True, drop_last=True)
 
     def get_train_loader(self, batch_size, num_workers):
         if self.aug == 0:
@@ -84,11 +90,13 @@ class NTUDataLoaders(object):
                 self.metric = 'CV'
             path = osp.join('./data/ntu', 'NTU_' + self.metric + '.h5')
         elif self.dataset == "Football":
-            path = osp.join('./data/ntu', 'SGN_football.h5')
+            path = osp.join('./data/football', 'SGN_football.h5')
 
         f = h5py.File(path , 'r')
+        self.all_X = f['all_x'][:]
+        self.all_Y = np.argmax(f['all_y'][:], -1)
         self.train_X = f['x'][:]
-        self.train_Y = np.argmax(f['y'][:],-1)
+        self.train_Y = np.argmax(f['y'][:], -1)
         self.val_X = f['valid_x'][:]
         self.val_Y = np.argmax(f['valid_y'][:], -1)
         self.test_X = f['test_x'][:]
