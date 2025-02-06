@@ -4,7 +4,8 @@ import argparse
 import time
 import shutil
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = '1'
+# TODO: Better way of determining cuda device
+os.environ["CUDA_VISIBLE_DEVICES"] = '0'
 import os.path as osp
 import csv
 import numpy as np
@@ -24,7 +25,7 @@ parser = argparse.ArgumentParser(description='Skeleton-Based Action Recgnition')
 fit.add_fit_args(parser)
 parser.set_defaults(
     network='SGN',
-    dataset = 'NTU',
+    dataset = 'Football',
     case = 0,
     batch_size=64,
     max_epochs=120,
@@ -34,7 +35,7 @@ parser.set_defaults(
     lr_factor=0.1,
     workers=16,
     print_freq = 20,
-    train = 0,
+    train = 1,
     seg = 20,
     )
 args = parser.parse_args()
@@ -52,6 +53,8 @@ def main():
     if torch.cuda.is_available():
         print('It is using GPU!')
         model = model.cuda()
+    else:
+        print("It is not using GPU! :(")
 
     criterion = LabelSmoothingLoss(args.num_classes, smoothing=0.1).cuda()
     optimizer = optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -158,7 +161,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
     for i, (inputs, target) in enumerate(train_loader):
 
         output = model(inputs.cuda())
-        target = target.cuda(async = True)
+        target = target.cuda(non_blocking=True)
         loss = criterion(output, target)
 
         # measure accuracy and record loss
@@ -188,7 +191,7 @@ def validate(val_loader, model, criterion):
     for i, (inputs, target) in enumerate(val_loader):
         with torch.no_grad():
             output = model(inputs.cuda())
-        target = target.cuda(async=True)
+        target = target.cuda(non_blocking=True)
         with torch.no_grad():
             loss = criterion(output, target)
 
@@ -219,7 +222,7 @@ def test(test_loader, model, checkpoint, lable_path, pred_path):
         label_output.append(target.cpu().numpy())
         pred_output.append(output.cpu().numpy())
 
-        acc = accuracy(output.data, target.cuda(async=True))
+        acc = accuracy(output.data, target.cuda(non_blocking=True))
         acces.update(acc[0], inputs.size(0))
 
 

@@ -83,6 +83,8 @@ class NTUDataLoaders(object):
             elif self.case == 1:
                 self.metric = 'CV'
             path = osp.join('./data/ntu', 'NTU_' + self.metric + '.h5')
+        elif self.dataset == "Football":
+            path = osp.join('./data/ntu', 'SGN_football.h5')
 
         f = h5py.File(path , 'r')
         self.train_X = f['x'][:]
@@ -111,7 +113,7 @@ class NTUDataLoaders(object):
             x = list(x)
 
         x, y = self.Tolist_fix(x, y, train=1)
-        lens = np.array([x_.shape[0] for x_ in x], dtype=np.int)
+        lens = np.array([x_.shape[0] for x_ in x], dtype=int)
         idx = lens.argsort()[::-1]  # sort sequence by valid length in descending order
         y = np.array(y)[idx]
         x = torch.stack([torch.from_numpy(x[i]) for i in idx], 0)
@@ -122,6 +124,8 @@ class NTUDataLoaders(object):
             elif self.case == 1:
                 theta = 0.5
         elif self.dataset == 'NTU120':
+            theta = 0.3
+        elif self.dataset == 'Football':
             theta = 0.3
 
         #### data augmentation
@@ -162,14 +166,16 @@ class NTUDataLoaders(object):
         seqs = []
 
         for idx, seq in enumerate(joints):
-            zero_row = []
-            for i in range(len(seq)):
-                if (seq[i, :] == np.zeros((1, 150))).all():
-                        zero_row.append(i)
+            # TODO: This code is for the NTU dataset where there can be 2 actors
+            #  might be useful for the future?
+            # zero_row = []
+            # for i in range(len(seq)):
+            #     if (seq[i, :] == np.zeros((1, 150))).all():
+            #             zero_row.append(i)
 
-            seq = np.delete(seq, zero_row, axis = 0)
+            # seq = np.delete(seq, zero_row, axis = 0)
 
-            seq = turn_two_to_one(seq)
+            # seq = turn_two_to_one(seq)
             seqs = self.sub_seq(seqs, seq, train=train)
 
         return seqs, y

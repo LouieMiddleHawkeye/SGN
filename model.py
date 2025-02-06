@@ -8,24 +8,26 @@ class SGN(nn.Module):
     def __init__(self, num_classes, dataset, seg, args, bias = True):
         super(SGN, self).__init__()
 
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
         self.dim1 = 256
         self.dataset = dataset
         self.seg = seg
-        num_joint = 25
+        self.num_joint = 29
         bs = args.batch_size
         if args.train:
-            self.spa = self.one_hot(bs, num_joint, self.seg)
-            self.spa = self.spa.permute(0, 3, 2, 1).cuda()
-            self.tem = self.one_hot(bs, self.seg, num_joint)
-            self.tem = self.tem.permute(0, 3, 1, 2).cuda()
+            self.spa = self.one_hot(bs, self.num_joint, self.seg)
+            self.spa = self.spa.permute(0, 3, 2, 1).to(device)
+            self.tem = self.one_hot(bs, self.seg, self.num_joint)
+            self.tem = self.tem.permute(0, 3, 1, 2).to(device)
         else:
-            self.spa = self.one_hot(32 * 5, num_joint, self.seg)
-            self.spa = self.spa.permute(0, 3, 2, 1).cuda()
-            self.tem = self.one_hot(32 * 5, self.seg, num_joint)
-            self.tem = self.tem.permute(0, 3, 1, 2).cuda()
+            self.spa = self.one_hot(32 * 5, self.num_joint, self.seg)
+            self.spa = self.spa.permute(0, 3, 2, 1).to(device)
+            self.tem = self.one_hot(32 * 5, self.seg, self.num_joint)
+            self.tem = self.tem.permute(0, 3, 1, 2).to(device)
 
         self.tem_embed = embed(self.seg, 64*4, norm=False, bias=bias)
-        self.spa_embed = embed(num_joint, 64, norm=False, bias=bias)
+        self.spa_embed = embed(self.num_joint, 64, norm=False, bias=bias)
         self.joint_embed = embed(3, 64, norm=True, bias=bias)
         self.dif_embed = embed(3, 64, norm=True, bias=bias)
         self.maxpool = nn.AdaptiveMaxPool2d((1, 1))
@@ -93,7 +95,7 @@ class norm_data(nn.Module):
     def __init__(self, dim= 64):
         super(norm_data, self).__init__()
 
-        self.bn = nn.BatchNorm1d(dim* 25)
+        self.bn = nn.BatchNorm1d(dim * self.num_joint)
 
     def forward(self, x):
         bs, c, num_joints, step = x.size()
