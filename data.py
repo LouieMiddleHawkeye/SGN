@@ -91,7 +91,9 @@ class NTUDataLoaders(object):
             path = osp.join('./data/ntu', 'NTU_' + self.metric + '.h5')
         elif self.dataset == "Football":
             path = osp.join('./data/football', 'SGN_football.h5')
-        elif dataset_path != None:
+        
+        # Override defaults
+        if dataset_path != None:
             path = dataset_path
 
         f = h5py.File(path , 'r')
