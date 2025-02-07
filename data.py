@@ -31,12 +31,12 @@ class NTUDataset(Dataset):
         return [self.x[index], int(self.y[index])]
 
 class NTUDataLoaders(object):
-    def __init__(self, dataset ='NTU', case = 0, aug = 1, seg = 30):
+    def __init__(self, dataset ='NTU', case = 0, aug = 1, seg = 30, dataset_path=None):
         self.dataset = dataset
         self.case = case
         self.aug = aug
         self.seg = seg
-        self.create_datasets()
+        self.create_datasets(dataset_path)
         self.all_set = NTUDataset(self.all_X, self.all_Y)
         self.train_set = NTUDataset(self.train_X, self.train_Y)
         self.val_set = NTUDataset(self.val_X, self.val_Y)
@@ -82,7 +82,7 @@ class NTUDataLoaders(object):
     def get_test_size(self):
         return len(self.test_Y)
 
-    def create_datasets(self):
+    def create_datasets(self, dataset_path):
         if self.dataset == 'NTU':
             if self.case ==0:
                 self.metric = 'CS'
@@ -91,6 +91,8 @@ class NTUDataLoaders(object):
             path = osp.join('./data/ntu', 'NTU_' + self.metric + '.h5')
         elif self.dataset == "Football":
             path = osp.join('./data/football', 'SGN_football.h5')
+        elif dataset_path != None:
+            path = dataset_path
 
         f = h5py.File(path , 'r')
         self.all_X = f['all_x'][:]
