@@ -4,8 +4,9 @@ from torch import nn
 import torch
 import math
 
+
 class SGN(nn.Module):
-    def __init__(self, num_classes, dataset, seg, args, bias = True):
+    def __init__(self, num_classes, dataset, seg, args, bias=True):
         super(SGN, self).__init__()
 
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -26,7 +27,7 @@ class SGN(nn.Module):
             self.tem = self.one_hot(bs * 5, self.seg, self.num_joint)
             self.tem = self.tem.permute(0, 3, 1, 2).to(device)
 
-        self.tem_embed = embed(self.seg, 64*4, norm=False, bias=bias)
+        self.tem_embed = embed(self.seg, 64 * 4, norm=False, bias=bias)
         self.spa_embed = embed(self.num_joint, 64, norm=False, bias=bias)
         self.joint_embed = embed(3, 64, norm=True, bias=bias, num_joint=self.num_joint)
         self.dif_embed = embed(3, 64, norm=True, bias=bias, num_joint=self.num_joint)
@@ -41,18 +42,17 @@ class SGN(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
+                m.weight.data.normal_(0, math.sqrt(2.0 / n))
 
         nn.init.constant_(self.gcn1.w.cnn.weight, 0)
         nn.init.constant_(self.gcn2.w.cnn.weight, 0)
         nn.init.constant_(self.gcn3.w.cnn.weight, 0)
 
-
     def forward(self, input):
-        
+
         # Dynamic Representation
         bs, step, dim = input.size()
-        num_joints = dim //3
+        num_joints = dim // 3
         input = input.view((bs, step, num_joints, 3))
         input = input.permute(0, 3, 2, 1).contiguous()
         dif = input[:, :, :, 1:] - input[:, :, :, 0:-1]
@@ -63,7 +63,7 @@ class SGN(nn.Module):
         dif = self.dif_embed(dif)
         dy = pos + dif
         # Joint-level Module
-        input= torch.cat([dy, spa1], 1)
+        input = torch.cat([dy, spa1], 1)
         g = self.compute_g1(input)
         input = self.gcn1(input, g)
         input = self.gcn2(input, g)
@@ -91,6 +91,7 @@ class SGN(nn.Module):
 
         return y_onehot
 
+
 class norm_data(nn.Module):
     def __init__(self, dim=64, num_joint=29):
         super(norm_data, self).__init__()
@@ -103,6 +104,7 @@ class norm_data(nn.Module):
         x = self.bn(x)
         x = x.view(bs, -1, num_joints, step).contiguous()
         return x
+
 
 class embed(nn.Module):
     def __init__(self, dim=3, dim1=128, norm=True, bias=False, num_joint=29):
@@ -128,8 +130,9 @@ class embed(nn.Module):
         x = self.cnn(x)
         return x
 
+
 class cnn1x1(nn.Module):
-    def __init__(self, dim1 = 3, dim2 =3, bias = True):
+    def __init__(self, dim1=3, dim2=3, bias=True):
         super(cnn1x1, self).__init__()
         self.cnn = nn.Conv2d(dim1, dim2, kernel_size=1, bias=bias)
 
@@ -137,8 +140,9 @@ class cnn1x1(nn.Module):
         x = self.cnn(x)
         return x
 
+
 class local(nn.Module):
-    def __init__(self, dim1 = 3, dim2 = 3, bias = False):
+    def __init__(self, dim1=3, dim2=3, bias=False):
         super(local, self).__init__()
         self.maxpool = nn.AdaptiveMaxPool2d((1, 20))
         self.cnn1 = nn.Conv2d(dim1, dim1, kernel_size=(1, 3), padding=(0, 1), bias=bias)
@@ -160,14 +164,14 @@ class local(nn.Module):
 
         return x
 
+
 class gcn_spa(nn.Module):
-    def __init__(self, in_feature, out_feature, bias = False):
+    def __init__(self, in_feature, out_feature, bias=False):
         super(gcn_spa, self).__init__()
         self.bn = nn.BatchNorm2d(out_feature)
         self.relu = nn.ReLU()
         self.w = cnn1x1(in_feature, out_feature, bias=False)
         self.w1 = cnn1x1(in_feature, out_feature, bias=bias)
-
 
     def forward(self, x1, g):
         x = x1.permute(0, 3, 2, 1).contiguous()
@@ -177,8 +181,9 @@ class gcn_spa(nn.Module):
         x = self.relu(self.bn(x))
         return x
 
+
 class compute_g_spa(nn.Module):
-    def __init__(self, dim1 = 64 *3, dim2 = 64*3, bias = False):
+    def __init__(self, dim1=64 * 3, dim2=64 * 3, bias=False):
         super(compute_g_spa, self).__init__()
         self.dim1 = dim1
         self.dim2 = dim2
