@@ -49,7 +49,6 @@ class SGN(nn.Module):
         nn.init.constant_(self.gcn3.w.cnn.weight, 0)
 
     def forward(self, input):
-
         # Dynamic Representation
         bs, step, dim = input.size()
         num_joints = dim // 3
@@ -79,7 +78,6 @@ class SGN(nn.Module):
         return output
 
     def one_hot(self, bs, spa, tem):
-
         y = torch.arange(spa).unsqueeze(-1)
         y_onehot = torch.FloatTensor(spa, spa)
 
@@ -192,7 +190,6 @@ class compute_g_spa(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(self, x1):
-
         g1 = self.g1(x1).permute(0, 3, 2, 1).contiguous()
         g2 = self.g2(x1).permute(0, 3, 1, 2).contiguous()
         g3 = g1.matmul(g2)
