@@ -24,4 +24,4 @@ def get_num_classes(dataset):
         return 120
     # TODO: Make variable? Learn from target size
     elif dataset == "Football":
-        return 5
+        return 2

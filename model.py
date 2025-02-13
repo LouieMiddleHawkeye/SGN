@@ -192,6 +192,6 @@ class compute_g_spa(nn.Module):
     def forward(self, x1):
         g1 = self.g1(x1).permute(0, 3, 2, 1).contiguous()
         g2 = self.g2(x1).permute(0, 3, 1, 2).contiguous()
-        g3 = g1.matmul(g2)
+        g3 = g1.matmul(g2)  # This is the adjacency matrix (relations between joints)
         g = self.softmax(g3)
         return g

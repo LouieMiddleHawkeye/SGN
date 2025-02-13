@@ -99,7 +99,6 @@ def main():
     # Training
     if args.train == 1:
         for epoch in range(args.start_epoch, args.max_epochs):
-
             print(epoch, optimizer.param_groups[0]["lr"])
 
             t_start = time.time()
