@@ -198,15 +198,14 @@ class NTUDataLoaders(object):
         seqs = []
 
         for idx, seq in enumerate(joints):
-            # TODO: This code is for the NTU dataset where there can be 2 actors
-            # zero_row = []
-            # for i in range(len(seq)):
-            #     if (seq[i, :] == np.zeros((1, 150))).all():
-            #             zero_row.append(i)
+            zero_row = []
+            for i in range(len(seq)):
+                if (seq[i, :] == np.zeros((1, 174))).all():
+                    zero_row.append(i)
 
-            # seq = np.delete(seq, zero_row, axis = 0)
+            seq = np.delete(seq, zero_row, axis=0)
 
-            # seq = turn_two_to_one(seq)
+            seq = turn_two_to_one(seq)
             seqs = self.sub_seq(seqs, seq, train=train)
 
         return seqs, y
@@ -266,13 +265,13 @@ class AverageMeter(object):
 def turn_two_to_one(seq):
     new_seq = list()
     for idx, ske in enumerate(seq):
-        if (ske[0:75] == np.zeros((1, 75))).all():
-            new_seq.append(ske[75:])
-        elif (ske[75:] == np.zeros((1, 75))).all():
-            new_seq.append(ske[0:75])
+        if (ske[0:87] == np.zeros((1, 87))).all():
+            new_seq.append(ske[87:])
+        elif (ske[87:] == np.zeros((1, 87))).all():
+            new_seq.append(ske[0:87])
         else:
-            new_seq.append(ske[0:75])
-            new_seq.append(ske[75:])
+            new_seq.append(ske[0:87])
+            new_seq.append(ske[87:])
     return np.array(new_seq)
 
 

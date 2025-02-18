@@ -15,7 +15,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 from model import SGN
 from data import NTUDataLoaders, AverageMeter
 import fit
-from util import make_dir, get_num_classes
+from util import make_dir
 
 # TODO: Better way of determining cuda device
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -38,12 +38,12 @@ parser.set_defaults(
     train=1,
     seg=20,
     num_joint=29,
+    num_classes=3,
 )
 args = parser.parse_args()
 
 
 def main():
-    args.num_classes = get_num_classes(args.dataset)
     model = SGN(args.num_classes, args.dataset, args.seg, args)
 
     total = get_n_params(model)
@@ -164,7 +164,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
     model.train()
 
     for i, (inputs, target) in enumerate(train_loader):
-
         output = model(inputs.cuda())
         target = target.cuda(non_blocking=True)
         loss = criterion(output, target)
