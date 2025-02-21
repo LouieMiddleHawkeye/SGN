@@ -150,8 +150,15 @@ class local(nn.Module):
         self.bn2 = nn.BatchNorm2d(dim2)
         self.dropout = nn.Dropout2d(0.2)
 
+        # Store pooling values for visualisation
+        self.pre_pool = None
+        self.post_pool = None
+
     def forward(self, x1):
-        x1 = self.maxpool(x1)
+        self.pre_pool = x1
+        x1 = self.maxpool(x1)  # This is the SMP max pooling
+        self.post_pool = x1
+
         x = self.cnn1(x1)
         x = self.bn1(x)
         x = self.relu(x)
