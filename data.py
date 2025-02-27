@@ -131,7 +131,7 @@ class NTUDataLoaders(object):
         self.test_Y = np.argmax(f["test_y"][:], -1)
         f.close()
 
-        # Combine the training data and validation data togehter as ST-GCN
+        # Combine the training data and validation data together as ST-GCN
         self.train_X = np.concatenate([self.train_X, self.val_X], axis=0)
         self.train_Y = np.concatenate([self.train_Y, self.val_Y], axis=0)
         self.val_X = self.test_X
@@ -198,14 +198,16 @@ class NTUDataLoaders(object):
         seqs = []
 
         for idx, seq in enumerate(joints):
-            zero_row = []
-            for i in range(len(seq)):
-                if (seq[i, :] == np.zeros((1, 174))).all():
-                    zero_row.append(i)
+            # TODO: temporary fix for 1 or 2 actors
+            if len(joints) == 174:
+                zero_row = []
+                for i in range(len(seq)):
+                    if (seq[i, :] == np.zeros((1, 174))).all():
+                        zero_row.append(i)
 
-            seq = np.delete(seq, zero_row, axis=0)
+                seq = np.delete(seq, zero_row, axis=0)
 
-            seq = turn_two_to_one(seq)
+                seq = turn_two_to_one(seq)
             seqs = self.sub_seq(seqs, seq, train=train)
 
         return seqs, y
@@ -222,6 +224,7 @@ class NTUDataLoaders(object):
 
         ave_duration = seq.shape[0] // group
 
+        # Random offsets
         if train == 1:
             offsets = np.multiply(list(range(group)), ave_duration) + np.random.randint(ave_duration, size=group)
             seq = seq[offsets]

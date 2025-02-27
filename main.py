@@ -21,7 +21,7 @@ from util import make_dir
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 np.random.seed(1337)
 
-parser = argparse.ArgumentParser(description="Skeleton-Based Action Recgnition")
+parser = argparse.ArgumentParser(description="Skeleton-Based Action Recognition")
 fit.add_fit_args(parser)
 parser.set_defaults(
     network="SGN",
@@ -38,7 +38,7 @@ parser.set_defaults(
     train=1,
     seg=20,
     num_joint=29,
-    num_classes=3,
+    num_classes=2,
 )
 args = parser.parse_args()
 
